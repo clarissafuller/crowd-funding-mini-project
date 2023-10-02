@@ -1,10 +1,23 @@
 const router = require('express').Router();
 const { User } = require('../../models');
 
+router.post('/', async (req, res) => {
+  try {
+    const userData = await User.create(req.body);
+
+    req.session.save(() => {
+      req.session.user_id = userData.id;
+      req.session.logged_in = true;
+
+      res.status(200).json(userData);
+    });
+  } catch (err) {
+    res.status(400).json(err);
+  }
+});
+
 router.post('/login', async (req, res) => {
   try {
-    // TODO: Add a comment describing the functionality of this expression
-    //this finds the user in the database that matches what was typed in on the login page
     const userData = await User.findOne({ where: { email: req.body.email } });
 
     if (!userData) {
@@ -14,8 +27,6 @@ router.post('/login', async (req, res) => {
       return;
     }
 
-    // TODO: Add a comment describing the functionality of this expression
-    //this is checking if the inputted password matches the one in the database. returns a boolean 
     const validPassword = await userData.checkPassword(req.body.password);
 
     if (!validPassword) {
@@ -25,8 +36,6 @@ router.post('/login', async (req, res) => {
       return;
     }
 
-    // TODO: Add a comment describing the functionality of this method
-    //
     req.session.save(() => {
       req.session.user_id = userData.id;
       req.session.logged_in = true;
@@ -41,7 +50,6 @@ router.post('/login', async (req, res) => {
 
 router.post('/logout', (req, res) => {
   if (req.session.logged_in) {
-    // TODO: Add a comment describing the functionality of this method
     req.session.destroy(() => {
       res.status(204).end();
     });
